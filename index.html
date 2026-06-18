@@ -3,917 +3,527 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>MarketEdge — Stock Watchlist</title>
+  <title>Gian De Gruccio — Finance Research Project</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
   <style>
     :root[data-theme="dark"] {
-      --bg:         #080E1A;
-      --bg2:        #0D1525;
-      --bg3:        #111D30;
-      --card:       #0F1A2E;
-      --border:     #1E2D45;
-      --text:       #E8EDF5;
-      --muted:      #5A7094;
-      --gold:       #F0B429;
-      --gold-dim:   rgba(240,180,41,0.12);
-      --red:        #EF4444;
-      --red-dim:    rgba(239,68,68,0.12);
-      --green:      #22C55E;
-      --green-dim:  rgba(34,197,94,0.12);
-      --blue:       #3B82F6;
-      --ticker-bg:  #060B14;
+      --bg:#07101E; --bg2:#0C1829; --bg3:#111F35; --card:#0F1B30;
+      --border:#1C2C45; --text:#E8EDF5; --muted:#5A7094;
+      --gold:#F0B429; --gold-dim:rgba(240,180,41,0.1);
+      --red:#EF4444; --red-dim:rgba(239,68,68,0.1);
+      --green:#22C55E; --green-dim:rgba(34,197,94,0.1);
+      --blue:#3B82F6; --blue-dim:rgba(59,130,246,0.1);
+      --ticker-bg:#040C18;
     }
     :root[data-theme="light"] {
-      --bg:         #F0F4FA;
-      --bg2:        #E8EEF7;
-      --bg3:        #DDE5F2;
-      --card:       #FFFFFF;
-      --border:     #CBD5E1;
-      --text:       #0F172A;
-      --muted:      #64748B;
-      --gold:       #B45309;
-      --gold-dim:   rgba(180,83,9,0.08);
-      --red:        #DC2626;
-      --red-dim:    rgba(220,38,38,0.08);
-      --green:      #16A34A;
-      --green-dim:  rgba(22,163,74,0.08);
-      --blue:       #2563EB;
-      --ticker-bg:  #0F172A;
+      --bg:#F0F4FA; --bg2:#E4EBF5; --bg3:#D8E2F0; --card:#FFFFFF;
+      --border:#C8D5E8; --text:#0F172A; --muted:#64748B;
+      --gold:#B45309; --gold-dim:rgba(180,83,9,0.08);
+      --red:#DC2626; --red-dim:rgba(220,38,38,0.08);
+      --green:#16A34A; --green-dim:rgba(22,163,74,0.08);
+      --blue:#2563EB; --blue-dim:rgba(37,99,235,0.08);
+      --ticker-bg:#0F172A;
     }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html{scroll-behavior:smooth;}
+    body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;transition:background .3s,color .3s;}
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* TICKER */
+    .ticker-wrap{background:var(--ticker-bg);border-bottom:1px solid #0d1e35;overflow:hidden;height:34px;display:flex;align-items:center;}
+    .ticker-track{display:flex;animation:tickScroll 70s linear infinite;white-space:nowrap;}
+    .ticker-wrap:hover .ticker-track{animation-play-state:paused;}
+    @keyframes tickScroll{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+    .ti{display:inline-flex;align-items:center;gap:7px;padding:0 20px;font-family:'JetBrains Mono',monospace;font-size:11px;border-right:1px solid #0d1e35;}
+    .ti .ts{color:#6B8CAE;font-weight:600;} .ti .tp{color:#C8D8EC;} .ti .tc{font-weight:600;}
+    .ti .tc.up{color:#22C55E;} .ti .tc.down{color:#EF4444;} .ti .tc.flat{color:#6B8CAE;}
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Inter', sans-serif;
-      min-height: 100vh;
-      transition: background 0.3s, color 0.3s;
-    }
+    /* NAV */
+    nav{background:var(--bg2);border-bottom:1px solid var(--border);height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;position:sticky;top:0;z-index:100;backdrop-filter:blur(16px);}
+    .nav-logo{font-family:'DM Serif Display',serif;font-size:18px;display:flex;align-items:center;gap:10px;}
+    .nav-logo em{font-style:normal;font-family:'JetBrains Mono',monospace;font-size:9px;background:var(--gold-dim);color:var(--gold);padding:2px 8px;border-radius:3px;letter-spacing:.12em;text-transform:uppercase;}
+    .nav-links{display:flex;gap:4px;}
+    .nav-link{background:none;border:none;color:var(--muted);font-size:13px;padding:6px 12px;border-radius:6px;cursor:pointer;transition:all .15s;font-family:'Inter',sans-serif;}
+    .nav-link:hover,.nav-link.active{background:var(--bg3);color:var(--text);}
+    .nav-right{display:flex;align-items:center;gap:12px;}
+    .mkt-status{display:flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);}
+    .sdot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);animation:blink 2s infinite;}
+    .sdot.closed{background:var(--red);box-shadow:0 0 5px var(--red);animation:none;}
+    @keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+    .theme-btn{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:5px 10px;border-radius:5px;font-size:11px;cursor:pointer;}
 
-    /* ── TICKER TAPE ── */
-    .ticker-wrap {
-      background: var(--ticker-bg);
-      border-bottom: 1px solid var(--border);
-      overflow: hidden;
-      height: 36px;
-      display: flex;
-      align-items: center;
-    }
-    .ticker-track {
-      display: flex;
-      gap: 0;
-      animation: tickerScroll 60s linear infinite;
-      white-space: nowrap;
-    }
-    .ticker-wrap:hover .ticker-track { animation-play-state: paused; }
-    @keyframes tickerScroll {
-      0%   { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
-    }
-    .ticker-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 0 24px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      border-right: 1px solid #1a2540;
-    }
-    .ticker-item .t-sym  { color: #94A3B8; font-weight: 600; }
-    .ticker-item .t-price{ color: #E2E8F0; }
-    .ticker-item .t-chg  { font-weight: 600; }
-    .ticker-item .t-chg.up   { color: #22C55E; }
-    .ticker-item .t-chg.down { color: #EF4444; }
-    .ticker-item .t-chg.flat { color: #94A3B8; }
+    /* SECTIONS */
+    .section{display:none;max-width:1200px;margin:0 auto;padding:44px 24px 80px;}
+    .section.active{display:block;}
 
-    /* ── NAVBAR ── */
-    nav {
-      background: var(--bg2);
-      border-bottom: 1px solid var(--border);
-      padding: 0 32px;
-      height: 56px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      backdrop-filter: blur(12px);
-    }
-    .nav-logo {
-      font-family: 'DM Serif Display', serif;
-      font-size: 20px;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .nav-logo span {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      background: var(--gold-dim);
-      color: var(--gold);
-      padding: 2px 8px;
-      border-radius: 3px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-    }
-    .nav-right { display: flex; align-items: center; gap: 16px; }
-    .market-status {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      color: var(--muted);
-    }
-    .status-dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: var(--green);
-      box-shadow: 0 0 6px var(--green);
-      animation: pulse 2s infinite;
-    }
-    .status-dot.closed { background: var(--red); box-shadow: 0 0 6px var(--red); animation: none; }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0.4; }
-    }
-    .theme-btn {
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-size: 12px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .theme-btn:hover { background: var(--border); }
+    /* HERO BAND */
+    .hero-band{background:var(--bg2);border-bottom:1px solid var(--border);padding:40px 32px 36px;}
+    .hero-inner{max-width:1200px;margin:0 auto;}
+    .eyebrow{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gold);letter-spacing:.16em;text-transform:uppercase;margin-bottom:10px;}
+    .hero-band h1{font-family:'DM Serif Display',serif;font-size:clamp(26px,4vw,50px);font-weight:400;line-height:1.1;margin-bottom:8px;}
+    .hero-sub{color:var(--muted);font-size:13px;max-width:500px;line-height:1.6;margin-bottom:28px;}
+    .kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;max-width:860px;}
+    .kpi{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 18px;}
+    .kpi .kl{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px;}
+    .kpi .kv{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:600;}
+    .kpi .kv.up{color:var(--green);} .kpi .kv.down{color:var(--red);}
+    .kpi .ks{font-size:11px;color:var(--muted);margin-top:3px;}
 
-    /* ── HERO ── */
-    .hero {
-      background: var(--bg2);
-      border-bottom: 1px solid var(--border);
-      padding: 40px 32px;
-    }
-    .hero-inner { max-width: 1200px; margin: 0 auto; }
-    .hero-eyebrow {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      color: var(--gold);
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      margin-bottom: 12px;
-    }
-    .hero h1 {
-      font-family: 'DM Serif Display', serif;
-      font-size: clamp(28px, 4vw, 52px);
-      font-weight: 400;
-      line-height: 1.1;
-      margin-bottom: 8px;
-    }
-    .hero-sub {
-      color: var(--muted);
-      font-size: 14px;
-      max-width: 520px;
-      line-height: 1.6;
-      margin-bottom: 32px;
-    }
+    /* FILTERS */
+    .ctrl-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:28px;}
+    .fb{background:var(--card);border:1px solid var(--border);color:var(--muted);padding:6px 13px;border-radius:6px;font-size:11px;font-family:'JetBrains Mono',monospace;cursor:pointer;transition:all .15s;letter-spacing:.04em;}
+    .fb:hover,.fb.on{background:var(--blue);border-color:var(--blue);color:#fff;}
+    .rfbtn{margin-left:auto;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:6px 14px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;}
+    .rfbtn:disabled{opacity:.5;cursor:not-allowed;}
 
-    /* ── PORTFOLIO HERO STATS ── */
-    .hero-stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 16px;
-      max-width: 900px;
-    }
-    .hero-stat {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 18px 20px;
-    }
-    .hero-stat .hs-label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      margin-bottom: 8px;
-    }
-    .hero-stat .hs-value {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 24px;
-      font-weight: 600;
-      color: var(--text);
-    }
-    .hero-stat .hs-value.up   { color: var(--green); }
-    .hero-stat .hs-value.down { color: var(--red); }
-    .hero-stat .hs-sub {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 4px;
-    }
+    /* SECTION HEADER */
+    .sec-hd{display:flex;align-items:center;gap:12px;margin-bottom:18px;margin-top:40px;}
+    .sec-hd:first-of-type{margin-top:0;}
+    .tier-pill{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;padding:4px 10px;border-radius:20px;}
+    .pill-c{background:var(--gold-dim);color:var(--gold);}
+    .pill-g{background:var(--red-dim);color:var(--red);}
+    .sec-hd h2{font-family:'DM Serif Display',serif;font-size:19px;font-weight:400;}
+    .sec-hd .sc{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);}
+    .sec-line{border:none;border-top:1px solid var(--border);margin-bottom:22px;}
 
-    /* ── MAIN LAYOUT ── */
-    main { max-width: 1200px; margin: 0 auto; padding: 40px 24px 80px; }
+    /* STOCK GRID */
+    .sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;}
 
-    /* ── FILTERS ── */
-    .controls {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 32px;
-    }
-    .filter-btn {
-      background: var(--card);
-      border: 1px solid var(--border);
-      color: var(--muted);
-      padding: 7px 14px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-family: 'JetBrains Mono', monospace;
-      cursor: pointer;
-      transition: all 0.15s;
-      letter-spacing: 0.05em;
-    }
-    .filter-btn:hover,
-    .filter-btn.active {
-      background: var(--blue);
-      border-color: var(--blue);
-      color: #fff;
-    }
-    .refresh-btn {
-      margin-left: auto;
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 7px 16px;
-      border-radius: 6px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      cursor: pointer;
-      transition: background 0.15s;
-      letter-spacing: 0.05em;
-    }
-    .refresh-btn:hover    { background: var(--border); }
-    .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    /* CARD */
+    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;position:relative;overflow:hidden;transition:transform .15s,box-shadow .15s,border-color .15s;opacity:0;transform:translateY(14px);animation:fadeUp .35s forwards;}
+    .card:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,0,0,.28);border-color:var(--blue);}
+    @keyframes fadeUp{to{opacity:1;transform:translateY(0);}}
+    .card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+    .card.core::after{background:linear-gradient(90deg,var(--gold),transparent);}
+    .card.growth::after{background:linear-gradient(90deg,var(--red),transparent);}
+    .ctop{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;}
+    .csym{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:600;}
+    .cname{font-size:11px;color:var(--muted);margin-top:2px;}
+    .ctag{font-family:'JetBrains Mono',monospace;font-size:9px;background:var(--bg3);color:var(--muted);padding:2px 7px;border-radius:3px;letter-spacing:.07em;margin-top:5px;display:inline-block;}
+    .cprice{text-align:right;}
+    .cpval{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;}
+    .cpval.loading{font-size:12px;color:var(--muted);font-weight:400;}
+    .cpchg{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;margin-top:2px;}
+    .cpchg.up{color:var(--green);} .cpchg.down{color:var(--red);}
+    .score-badge{position:absolute;top:14px;right:14px;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;border:2px solid;}
+    .grade-A{background:rgba(34,197,94,.15);border-color:var(--green);color:var(--green);}
+    .grade-B{background:rgba(59,130,246,.15);border-color:var(--blue);color:var(--blue);}
+    .grade-C{background:rgba(240,180,41,.15);border-color:var(--gold);color:var(--gold);}
+    .grade-D{background:rgba(239,68,68,.15);border-color:var(--red);color:var(--red);}
+    .spark-wrap{margin:10px 0;height:36px;}
+    .spark-wrap canvas{width:100%!important;height:36px!important;}
+    .thesis-txt{font-size:12px;color:var(--muted);line-height:1.55;margin-bottom:12px;}
+    .stat-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+    .schip{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);}
+    .schip b{color:var(--text);margin-left:3px;}
+    .risk-row{display:flex;align-items:center;gap:8px;}
+    .rl{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;white-space:nowrap;}
+    .rtrack{flex:1;height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
+    .rfill{height:100%;border-radius:2px;}
+    .card.core .rfill{background:var(--gold);}
+    .card.growth .rfill{background:var(--red);}
 
-    /* ── SECTION HEADER ── */
-    .section-hd {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 20px;
-      margin-top: 44px;
-    }
-    .section-hd:first-of-type { margin-top: 0; }
-    .tier-pill {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      padding: 4px 10px;
-      border-radius: 20px;
-    }
-    .pill-core   { background: var(--gold-dim); color: var(--gold); }
-    .pill-growth { background: var(--red-dim);  color: var(--red); }
-    .section-hd h2 {
-      font-family: 'DM Serif Display', serif;
-      font-size: 20px;
-      font-weight: 400;
-    }
-    .section-hd .s-count {
-      margin-left: auto;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      color: var(--muted);
-    }
-    .section-line {
-      border: none;
-      border-top: 1px solid var(--border);
-      margin-bottom: 24px;
-    }
+    /* ── SCORING MODEL ── */
+    .score-intro{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:28px;margin-bottom:32px;}
+    .score-intro h3{font-family:'DM Serif Display',serif;font-size:22px;font-weight:400;margin-bottom:8px;}
+    .score-intro p{font-size:13px;color:var(--muted);line-height:1.65;max-width:700px;margin-bottom:20px;}
+    .formula-row{display:flex;gap:10px;flex-wrap:wrap;}
+    .fblock{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 16px;min-width:140px;}
+    .fblock .fw{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:600;color:var(--blue);}
+    .fblock .fn{font-size:11px;color:var(--muted);margin-top:2px;}
+    .fblock .fd{font-size:11px;color:var(--text);margin-top:4px;line-height:1.4;}
 
-    /* ── GRID ── */
-    .stock-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
-      gap: 16px;
-    }
+    .score-table-wrap{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+    .score-table-hd{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+    .score-table-hd h4{font-family:'DM Serif Display',serif;font-size:18px;font-weight:400;}
+    .sort-hint{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);}
+    table{width:100%;border-collapse:collapse;}
+    thead th{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;padding:12px 16px;text-align:left;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap;}
+    thead th:hover{color:var(--text);}
+    thead th.sorted{color:var(--blue);}
+    tbody tr{border-bottom:1px solid var(--border);transition:background .12s;}
+    tbody tr:last-child{border-bottom:none;}
+    tbody tr:hover{background:var(--bg3);}
+    tbody td{padding:14px 16px;font-size:13px;}
+    .td-sym{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:14px;}
+    .td-name{color:var(--muted);font-size:11px;}
+    .td-score{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:15px;}
+    .td-grade{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;padding:3px 10px;border-radius:4px;display:inline-block;}
+    .td-bar{display:flex;align-items:center;gap:8px;}
+    .td-bar-track{flex:1;height:4px;background:var(--border);border-radius:2px;min-width:60px;}
+    .td-bar-fill{height:100%;border-radius:2px;background:var(--blue);}
+    .td-rating{font-family:'JetBrains Mono',monospace;font-size:10px;padding:3px 9px;border-radius:3px;letter-spacing:.06em;}
+    .rat-buy{background:var(--green-dim);color:var(--green);}
+    .rat-watch{background:var(--gold-dim);color:var(--gold);}
+    .rat-avoid{background:var(--red-dim);color:var(--red);}
 
-    /* ── CARD ── */
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-      cursor: pointer;
-      transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
-      position: relative;
-      overflow: hidden;
-      opacity: 0;
-      transform: translateY(16px);
-      animation: fadeUp 0.4s forwards;
-    }
-    .card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-      border-color: var(--blue);
-    }
-    @keyframes fadeUp {
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .card::after {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-    }
-    .card.core::after   { background: linear-gradient(90deg, var(--gold), transparent); }
-    .card.growth::after { background: linear-gradient(90deg, var(--red),  transparent); }
+    /* SCORE BREAKDOWN MINI BARS */
+    .mini-scores{display:flex;gap:4px;flex-wrap:wrap;}
+    .ms{font-family:'JetBrains Mono',monospace;font-size:9px;background:var(--bg3);border:1px solid var(--border);border-radius:3px;padding:2px 6px;color:var(--muted);}
+    .ms b{color:var(--text);}
 
-    .card-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 14px;
-    }
-    .ticker-sym {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 20px;
-      font-weight: 600;
-    }
-    .co-name {
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-    .sector-tag {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 9px;
-      background: var(--bg3);
-      color: var(--muted);
-      padding: 3px 8px;
-      border-radius: 3px;
-      letter-spacing: 0.08em;
-      margin-top: 6px;
-      display: inline-block;
-    }
-    .price-col { text-align: right; }
-    .live-price {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 22px;
-      font-weight: 600;
-    }
-    .live-price.loading { font-size: 13px; color: var(--muted); font-weight: 400; }
-    .live-chg {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      font-weight: 600;
-      margin-top: 2px;
-    }
-    .live-chg.up   { color: var(--green); }
-    .live-chg.down { color: var(--red); }
+    /* ── JOURNAL ── */
+    .journal-intro{font-size:13px;color:var(--muted);line-height:1.65;max-width:680px;margin-bottom:32px;}
+    .journal-entry{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:26px;margin-bottom:16px;}
+    .je-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;}
+    .je-week{font-family:'DM Serif Display',serif;font-size:18px;font-weight:400;}
+    .je-date{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);margin-top:3px;}
+    .je-perf{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:600;}
+    .je-perf.up{color:var(--green);} .je-perf.down{color:var(--red);}
+    .je-body{font-size:13px;color:var(--muted);line-height:1.7;}
+    .je-body p{margin-bottom:10px;}
+    .je-body p:last-child{margin-bottom:0;}
+    .je-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px;}
+    .je-tag{font-family:'JetBrains Mono',monospace;font-size:9px;background:var(--bg3);border:1px solid var(--border);border-radius:3px;padding:3px 8px;color:var(--muted);}
+    .coming-soon{background:var(--card);border:1px dashed var(--border);border-radius:12px;padding:32px;text-align:center;color:var(--muted);font-size:13px;}
+    .coming-soon span{display:block;font-family:'JetBrains Mono',monospace;font-size:11px;margin-top:8px;color:var(--muted);}
 
-    /* sparkline */
-    .sparkline-wrap {
-      margin: 12px 0;
-      height: 40px;
-      position: relative;
-    }
-    .sparkline-wrap canvas { width: 100% !important; height: 40px !important; }
-
-    .thesis-text {
-      font-size: 12.5px;
-      color: var(--muted);
-      line-height: 1.55;
-      margin-bottom: 14px;
-    }
-
-    /* stats row */
-    .stat-row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 14px;
-    }
-    .stat-chip {
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 4px 9px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      color: var(--muted);
-    }
-    .stat-chip b { color: var(--text); margin-left: 3px; }
-
-    /* 52w bar */
-    .wk52-wrap { margin-bottom: 14px; }
-    .wk52-label {
-      display: flex;
-      justify-content: space-between;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 9px;
-      color: var(--muted);
-      margin-bottom: 4px;
-    }
-    .wk52-track {
-      height: 4px;
-      background: var(--border);
-      border-radius: 2px;
-      position: relative;
-    }
-    .wk52-fill {
-      position: absolute;
-      left: 0; top: 0; bottom: 0;
-      background: var(--blue);
-      border-radius: 2px;
-      transition: width 0.6s ease;
-    }
-    .wk52-dot {
-      position: absolute;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      width: 8px; height: 8px;
-      background: var(--text);
-      border: 2px solid var(--bg);
-      border-radius: 50%;
-    }
-
-    /* risk meter */
-    .risk-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .risk-lbl {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 9px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      white-space: nowrap;
-    }
-    .risk-track {
-      flex: 1; height: 3px;
-      background: var(--border);
-      border-radius: 2px;
-      overflow: hidden;
-    }
-    .risk-fill { height: 100%; border-radius: 2px; }
-    .card.core   .risk-fill { background: var(--gold); }
-    .card.growth .risk-fill { background: var(--red); }
-
-    /* ── PORTFOLIO SIMULATOR ── */
-    .simulator {
-      margin-top: 56px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 32px;
-    }
-    .simulator h3 {
-      font-family: 'DM Serif Display', serif;
-      font-size: 24px;
-      font-weight: 400;
-      margin-bottom: 6px;
-    }
-    .simulator .sim-sub {
-      font-size: 13px;
-      color: var(--muted);
-      margin-bottom: 28px;
-    }
-    .sim-controls {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
-      margin-bottom: 28px;
-    }
-    .sim-label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      color: var(--muted);
-    }
-    .sim-slider {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 220px;
-      height: 4px;
-      background: var(--border);
-      border-radius: 2px;
-      outline: none;
-    }
-    .sim-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 16px; height: 16px;
-      background: var(--blue);
-      border-radius: 50%;
-      cursor: pointer;
-    }
-    .sim-amount {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--text);
-      min-width: 100px;
-    }
-    .sim-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 12px;
-      margin-bottom: 28px;
-    }
-    .sim-row {
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px 14px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .sim-row .sr-sym {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 13px;
-      font-weight: 600;
-    }
-    .sim-row .sr-alloc {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      color: var(--muted);
-    }
-    .sim-row .sr-val {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--green);
-    }
-    .sim-total {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 20px 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .sim-total .st-label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-    }
-    .sim-total .st-value {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 28px;
-      font-weight: 600;
-    }
-    .sim-total .st-value.up   { color: var(--green); }
-    .sim-total .st-value.down { color: var(--red); }
-    .sim-total .st-pnl {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 14px;
-      margin-top: 4px;
-    }
-    .sim-total .st-pnl.up   { color: var(--green); }
-    .sim-total .st-pnl.down { color: var(--red); }
-
-    /* ── METHODOLOGY ── */
-    .methodology {
-      margin-top: 56px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
-    }
-    @media (max-width: 700px) { .methodology { grid-template-columns: 1fr; } }
-    .method-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 28px;
-    }
-    .method-card h4 {
-      font-family: 'DM Serif Display', serif;
-      font-size: 18px;
-      font-weight: 400;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .method-card ul {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .method-card ul li {
-      font-size: 13px;
-      color: var(--muted);
-      padding-left: 18px;
-      position: relative;
-      line-height: 1.5;
-    }
-    .method-card ul li::before {
-      content: '→';
-      position: absolute;
-      left: 0;
-      color: var(--gold);
-    }
+    /* ── RESEARCH ── */
+    .research-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:28px;margin-bottom:18px;}
+    .rc-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;}
+    .rc-sym{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:600;}
+    .rc-name{font-size:13px;color:var(--muted);margin-top:3px;}
+    .rc-body h5{font-size:13px;font-weight:600;margin-bottom:6px;margin-top:16px;color:var(--text);}
+    .rc-body h5:first-child{margin-top:0;}
+    .rc-body p{font-size:13px;color:var(--muted);line-height:1.68;}
+    .rc-metrics{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+    .rcm{background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:8px 12px;}
+    .rcm .rm-l{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px;}
+    .rcm .rm-v{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;}
 
     /* ── ABOUT ── */
-    .about {
-      margin-top: 40px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 32px;
-      display: flex;
-      gap: 32px;
-      align-items: flex-start;
-    }
-    @media (max-width: 600px) { .about { flex-direction: column; } }
-    .about-avatar {
-      width: 60px; height: 60px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--blue), var(--gold));
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'DM Serif Display', serif;
-      font-size: 24px;
-      color: #fff;
-    }
-    .about h4 {
-      font-family: 'DM Serif Display', serif;
-      font-size: 20px;
-      font-weight: 400;
-      margin-bottom: 8px;
-    }
-    .about p {
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.7;
-      max-width: 600px;
-    }
+    .about-hero{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:36px;margin-bottom:20px;display:flex;gap:28px;align-items:flex-start;}
+    .about-av{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#3B82F6,#F0B429);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:26px;color:#fff;}
+    .about-hero h3{font-family:'DM Serif Display',serif;font-size:24px;font-weight:400;margin-bottom:4px;}
+    .about-hero .ah-sub{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gold);letter-spacing:.12em;text-transform:uppercase;margin-bottom:14px;}
+    .about-hero p{font-size:13px;color:var(--muted);line-height:1.72;max-width:620px;}
+    .learned-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:28px;margin-bottom:20px;}
+    .learned-card h4{font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin-bottom:16px;}
+    .learned-item{display:flex;gap:14px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+    .learned-item:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+    .li-num{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;color:var(--blue);opacity:.4;flex-shrink:0;line-height:1;}
+    .li-body h6{font-size:13px;font-weight:600;margin-bottom:4px;}
+    .li-body p{font-size:13px;color:var(--muted);line-height:1.6;}
+    .method-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+    @media(max-width:640px){.method-grid{grid-template-columns:1fr;}}
+    .method-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;}
+    .method-card h4{font-family:'DM Serif Display',serif;font-size:17px;font-weight:400;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+    .method-card ul{list-style:none;display:flex;flex-direction:column;gap:8px;}
+    .method-card li{font-size:12px;color:var(--muted);padding-left:16px;position:relative;line-height:1.5;}
+    .method-card li::before{content:'→';position:absolute;left:0;color:var(--gold);}
 
-    /* ── DISCLAIMER ── */
-    .disclaimer {
-      margin-top: 40px;
-      padding: 16px 20px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: var(--bg2);
-    }
-    .disclaimer p { font-size: 11px; color: var(--muted); line-height: 1.6; }
+    /* SIMULATOR */
+    .sim-section{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:28px;margin-top:32px;}
+    .sim-section h3{font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin-bottom:6px;}
+    .sim-section .ss-sub{font-size:13px;color:var(--muted);margin-bottom:22px;}
+    .sim-ctrl{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:22px;}
+    .sim-ctrl label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);}
+    input[type=range]{-webkit-appearance:none;appearance:none;width:200px;height:4px;background:var(--border);border-radius:2px;outline:none;}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;background:var(--blue);border-radius:50%;cursor:pointer;}
+    .sim-amt{font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:600;}
+    .sim-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:22px;}
+    .sim-row{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:11px 13px;display:flex;justify-content:space-between;align-items:center;}
+    .sr-sym{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;}
+    .sr-alloc{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);}
+    .sr-val{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;}
+    .sim-total{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:18px 22px;display:flex;justify-content:space-between;align-items:center;}
+    .st-lbl{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;}
+    .st-val{font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:600;}
+    .st-val.up{color:var(--green);} .st-val.down{color:var(--red);}
+    .st-pnl{font-family:'JetBrains Mono',monospace;font-size:13px;margin-top:3px;}
+    .st-pnl.up{color:var(--green);} .st-pnl.down{color:var(--red);}
 
-    /* ── COMPARE MODAL ── */
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.7);
-      z-index: 200;
-      align-items: center;
-      justify-content: center;
-      backdrop-filter: blur(4px);
-    }
-    .modal-overlay.open { display: flex; }
-    .modal {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 32px;
-      max-width: 800px;
-      width: 90%;
-      max-height: 80vh;
-      overflow-y: auto;
-    }
-    .modal-hd {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 24px;
-    }
-    .modal-hd h3 {
-      font-family: 'DM Serif Display', serif;
-      font-size: 22px;
-      font-weight: 400;
-    }
-    .modal-close {
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      color: var(--text);
-      width: 32px; height: 32px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-    .compare-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-    }
-    .compare-col {
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 20px;
-    }
-    .compare-col .cc-sym {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 20px;
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-    .compare-col .cc-name { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
-    .compare-col .cc-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      padding: 6px 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .compare-col .cc-row:last-child { border-bottom: none; }
-    .compare-col .cc-row span { color: var(--muted); }
-    .compare-col .cc-row b {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-    }
+    /* DISCLAIMER */
+    .disclaimer{margin-top:32px;padding:14px 18px;border:1px solid var(--border);border-radius:7px;background:var(--bg2);}
+    .disclaimer p{font-size:11px;color:var(--muted);line-height:1.6;}
 
-    /* compare toggle on cards */
-    .compare-toggle {
-      position: absolute;
-      top: 14px; right: 14px;
-      width: 20px; height: 20px;
-      border-radius: 4px;
-      border: 1px solid var(--border);
-      background: var(--bg3);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      color: var(--muted);
-      transition: all 0.15s;
-      z-index: 2;
-    }
-    .compare-toggle.selected {
-      background: var(--blue);
-      border-color: var(--blue);
-      color: #fff;
-    }
-    .compare-bar {
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--blue);
-      color: #fff;
-      padding: 12px 24px;
-      border-radius: 30px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      display: none;
-      align-items: center;
-      gap: 16px;
-      box-shadow: 0 8px 32px rgba(59,130,246,0.4);
-      z-index: 150;
-      cursor: pointer;
-      transition: opacity 0.2s;
-    }
-    .compare-bar.show { display: flex; }
-    .compare-bar:hover { opacity: 0.9; }
-
-    @media (max-width: 600px) {
-      nav { padding: 0 16px; }
-      .hero { padding: 28px 16px; }
-      main { padding: 28px 16px 60px; }
-      .simulator { padding: 20px; }
+    @media(max-width:600px){
+      nav{padding:0 14px;} .nav-links{display:none;}
+      .hero-band{padding:26px 16px;}
+      .section{padding:28px 14px 60px;}
+      .about-hero{flex-direction:column;}
     }
   </style>
 </head>
 <body>
 
-<!-- TICKER TAPE -->
-<div class="ticker-wrap">
-  <div class="ticker-track" id="ticker-track">
-    <!-- filled by JS -->
-  </div>
-</div>
+<!-- TICKER -->
+<div class="ticker-wrap"><div class="ticker-track" id="ticker-track"></div></div>
 
 <!-- NAV -->
 <nav>
-  <div class="nav-logo">
-    MarketEdge <span>Educational</span>
+  <div class="nav-logo">Gian De Gruccio <em>Finance</em></div>
+  <div class="nav-links">
+    <button class="nav-link active" onclick="showSection('watchlist',this)">Watchlist</button>
+    <button class="nav-link" onclick="showSection('scores',this)">Scoring Model</button>
+    <button class="nav-link" onclick="showSection('journal',this)">Journal</button>
+    <button class="nav-link" onclick="showSection('research',this)">Research</button>
+    <button class="nav-link" onclick="showSection('about',this)">About</button>
   </div>
   <div class="nav-right">
-    <div class="market-status">
-      <div class="status-dot" id="status-dot"></div>
-      <span id="status-text">Checking…</span>
-    </div>
-    <button class="theme-btn" onclick="toggleTheme()">☀ / ☾</button>
+    <div class="mkt-status"><div class="sdot" id="sdot"></div><span id="stxt">Checking…</span></div>
+    <button class="theme-btn" onclick="toggleTheme()">☀/☾</button>
   </div>
 </nav>
 
-<!-- HERO -->
-<div class="hero">
+<!-- HERO BAND -->
+<div class="hero-band" id="hero-band">
   <div class="hero-inner">
-    <div class="hero-eyebrow">Equity Research · Student Finance Project</div>
-    <h1>Stock Watchlist</h1>
-    <p class="hero-sub">A two-tier curated view — 10 blue-chip core holdings for stability, 5 high-conviction growth bets for the risk-tolerant investor.</p>
-    <div class="hero-stats">
-      <div class="hero-stat">
-        <div class="hs-label">Watchlist Value</div>
-        <div class="hs-value" id="hero-total">—</div>
-        <div class="hs-sub">$10k simulated portfolio</div>
-      </div>
-      <div class="hero-stat">
-        <div class="hs-label">Today's P&L</div>
-        <div class="hs-value" id="hero-pnl">—</div>
-        <div class="hs-sub">vs. yesterday's close</div>
-      </div>
-      <div class="hero-stat">
-        <div class="hs-label">Gainers</div>
-        <div class="hs-value up" id="hero-gainers">—</div>
-        <div class="hs-sub">of 15 positions up today</div>
-      </div>
-      <div class="hero-stat">
-        <div class="hs-label">Last Updated</div>
-        <div class="hs-value" id="hero-updated" style="font-size:14px">—</div>
-        <div class="hs-sub">Live via Finnhub</div>
-      </div>
+    <div class="eyebrow">Student Finance Research Project · Community College → Transfer</div>
+    <h1>Risk-Tiered Stock Watchlist</h1>
+    <p class="hero-sub">10 blue-chip core holdings for capital preservation. 5 high-conviction growth bets for asymmetric upside. Built and maintained by Gian De Gruccio.</p>
+    <div class="kpi-row">
+      <div class="kpi"><div class="kl">Portfolio Value</div><div class="kv" id="kv-total">—</div><div class="ks">$10k simulated</div></div>
+      <div class="kpi"><div class="kl">Today's P&L</div><div class="kv" id="kv-pnl">—</div><div class="ks">vs. yesterday close</div></div>
+      <div class="kpi"><div class="kl">Gainers</div><div class="kv up" id="kv-gain">—</div><div class="ks">of 15 up today</div></div>
+      <div class="kpi"><div class="kl">Top Scorer</div><div class="kv" id="kv-top" style="font-size:15px">—</div><div class="ks">by model score</div></div>
+      <div class="kpi"><div class="kl">Last Updated</div><div class="kv" id="kv-upd" style="font-size:13px">—</div><div class="ks">Live via Finnhub</div></div>
     </div>
   </div>
 </div>
 
-<!-- MAIN -->
-<main>
-
-  <!-- FILTERS -->
-  <div class="controls">
-    <button class="filter-btn active" onclick="filterCards('all', this)">All (15)</button>
-    <button class="filter-btn" onclick="filterCards('core', this)">Core Only</button>
-    <button class="filter-btn" onclick="filterCards('growth', this)">Growth Only</button>
-    <button class="filter-btn" onclick="filterCards('Technology', this)">Tech</button>
-    <button class="filter-btn" onclick="filterCards('Healthcare', this)">Healthcare</button>
-    <button class="filter-btn" onclick="filterCards('Financials', this)">Financials</button>
-    <button class="filter-btn" onclick="filterCards('Consumer Staples', this)">Staples</button>
-    <button class="refresh-btn" id="refresh-btn" onclick="loadAllPrices()">↻ Refresh Prices</button>
+<!-- ══ WATCHLIST ══ -->
+<div class="section active" id="sec-watchlist">
+  <div class="ctrl-row">
+    <button class="fb on" onclick="filterCards('all',this)">All (15)</button>
+    <button class="fb" onclick="filterCards('core',this)">Core</button>
+    <button class="fb" onclick="filterCards('growth',this)">Growth</button>
+    <button class="fb" onclick="filterCards('Technology',this)">Tech</button>
+    <button class="fb" onclick="filterCards('Healthcare',this)">Healthcare</button>
+    <button class="fb" onclick="filterCards('Financials',this)">Financials</button>
+    <button class="fb" onclick="filterCards('Consumer Staples',this)">Staples</button>
+    <button class="rfbtn" id="rfbtn" onclick="loadAllPrices()">↻ Refresh</button>
   </div>
 
-  <!-- CORE SECTION -->
-  <div class="section-hd">
-    <span class="tier-pill pill-core">Core Holdings</span>
+  <div class="sec-hd">
+    <span class="tier-pill pill-c">Core Holdings</span>
     <h2>Low Risk · Established Companies</h2>
-    <span class="s-count">10 picks</span>
+    <span class="sc">10 picks</span>
   </div>
-  <hr class="section-line"/>
-  <div class="stock-grid" id="core-grid"></div>
+  <hr class="sec-line"/>
+  <div class="sgrid" id="core-grid"></div>
 
-  <!-- GROWTH SECTION -->
-  <div class="section-hd">
-    <span class="tier-pill pill-growth">Growth Bets</span>
+  <div class="sec-hd">
+    <span class="tier-pill pill-g">Growth Bets</span>
     <h2>High Risk · High Reward</h2>
-    <span class="s-count">5 picks</span>
+    <span class="sc">5 picks</span>
   </div>
-  <hr class="section-line"/>
-  <div class="stock-grid" id="growth-grid"></div>
+  <hr class="sec-line"/>
+  <div class="sgrid" id="growth-grid"></div>
 
-  <!-- PORTFOLIO SIMULATOR -->
-  <div class="simulator">
+  <div class="sim-section">
     <h3>Portfolio Simulator</h3>
-    <p class="sim-sub">Allocate a hypothetical amount equally across all 15 picks and see how your portfolio moves with live prices.</p>
-    <div class="sim-controls">
-      <span class="sim-label">Starting capital:</span>
-      <input type="range" class="sim-slider" id="sim-slider" min="1000" max="100000" step="1000" value="10000" oninput="updateSimulator()"/>
-      <span class="sim-amount" id="sim-amount">$10,000</span>
+    <p class="ss-sub">Allocate capital equally across all 15 picks and watch it move with live prices.</p>
+    <div class="sim-ctrl">
+      <label>Capital:</label>
+      <input type="range" id="sim-slider" min="1000" max="100000" step="1000" value="10000" oninput="updateSim()"/>
+      <span class="sim-amt" id="sim-amt">$10,000</span>
     </div>
     <div class="sim-grid" id="sim-grid"></div>
     <div class="sim-total">
       <div>
-        <div class="st-label">Total Portfolio Value</div>
-        <div class="st-value" id="sim-total-val">Calculating…</div>
-        <div class="st-pnl" id="sim-total-pnl"></div>
+        <div class="st-lbl">Total Portfolio Value</div>
+        <div class="st-val" id="st-val">Calculating…</div>
+        <div class="st-pnl" id="st-pnl"></div>
       </div>
       <div style="text-align:right">
-        <div class="st-label">Return</div>
-        <div class="st-value" id="sim-return" style="font-size:20px">—</div>
+        <div class="st-lbl">Return Today</div>
+        <div class="st-val" id="st-ret" style="font-size:18px">—</div>
+      </div>
+    </div>
+  </div>
+  <div class="disclaimer"><p><strong>Educational purposes only.</strong> This is a student finance research project. Nothing here constitutes financial advice or a recommendation to buy or sell any security. Live prices via Finnhub free API. Fundamental stats are approximate reference values.</p></div>
+</div>
+
+<!-- ══ SCORING MODEL ══ -->
+<div class="section" id="sec-scores">
+  <div class="score-intro">
+    <h3>The Scoring Model</h3>
+    <p>Each stock is scored out of 100 using a weighted five-factor model. The goal is to make stock selection systematic rather than emotional — to have a repeatable framework I can defend, not just a gut-feel list. Scores above 75 get a Buy rating; 55–74 get Watch; below 55 get Avoid.</p>
+    <div class="formula-row">
+      <div class="fblock"><div class="fw">25%</div><div class="fn">Financial Strength</div><div class="fd">FCF, debt/equity, balance sheet quality</div></div>
+      <div class="fblock"><div class="fw">25%</div><div class="fn">Growth</div><div class="fd">Revenue growth rate, earnings trajectory</div></div>
+      <div class="fblock"><div class="fw">20%</div><div class="fn">Valuation</div><div class="fd">P/E vs. sector, price vs. 52w range</div></div>
+      <div class="fblock"><div class="fw">15%</div><div class="fn">Risk</div><div class="fd">Beta, volatility, cycle position</div></div>
+      <div class="fblock"><div class="fw">15%</div><div class="fn">Moat</div><div class="fd">Brand, switching costs, market leadership</div></div>
+    </div>
+  </div>
+  <div class="score-table-wrap">
+    <div class="score-table-hd">
+      <h4>All 15 Stocks — Ranked by Score</h4>
+      <span class="sort-hint">Click any column to sort ↕</span>
+    </div>
+    <table id="score-table">
+      <thead>
+        <tr>
+          <th onclick="sortTable('sym')">Ticker</th>
+          <th onclick="sortTable('score')">Score</th>
+          <th onclick="sortTable('grade')">Grade</th>
+          <th onclick="sortTable('fin')">Fin. Strength</th>
+          <th onclick="sortTable('growth')">Growth</th>
+          <th onclick="sortTable('val')">Valuation</th>
+          <th onclick="sortTable('risk')">Risk</th>
+          <th onclick="sortTable('moat')">Moat</th>
+          <th onclick="sortTable('rating')">Rating</th>
+        </tr>
+      </thead>
+      <tbody id="score-tbody"></tbody>
+    </table>
+  </div>
+  <div class="disclaimer" style="margin-top:20px"><p><strong>Model transparency:</strong> All scores are the author's own assessments based on publicly available fundamental data. They represent a learning exercise in quantitative stock analysis, not professional financial research.</p></div>
+</div>
+
+<!-- ══ JOURNAL ══ -->
+<div class="section" id="sec-journal">
+  <p class="journal-intro">A running log of what the simulated portfolio did each week, what my original assumptions got right or wrong, and what I learned. Updated weekly throughout Summer 2026.</p>
+
+  <div class="journal-entry">
+    <div class="je-hd">
+      <div><div class="je-week">Week 1 — Project Launch</div><div class="je-date">June 2026</div></div>
+      <div class="je-perf up">Initializing…</div>
+    </div>
+    <div class="je-body">
+      <p>This week I launched the project. My initial framework splits the portfolio into two tiers: Core Holdings (low beta, established companies, dividend history) and Growth Bets (high TAM, high volatility, asymmetric upside). The hardest decision was figuring out what actually makes a stock "core" vs "growth" — I landed on beta as the primary divider, with balance sheet quality as the secondary filter.</p>
+      <p>Building the scoring model forced me to think harder than I expected. Weighting five factors means deciding which matters most — I gave Financial Strength and Growth 25% each because those felt most fundamental. Moat and Risk got 15% each because they're harder to quantify but still matter. Valuation got 20% because it's the bridge between quality and price.</p>
+      <p>Biggest surprise so far: Visa scores higher than I expected on Financial Strength because of its asset-light model. It doesn't carry loan risk the way a traditional bank does — it just processes transactions. That's a different kind of financial moat than I initially understood.</p>
+    </div>
+    <div class="je-tags">
+      <span class="je-tag">scoring-model</span>
+      <span class="je-tag">portfolio-construction</span>
+      <span class="je-tag">beta</span>
+      <span class="je-tag">moat</span>
+    </div>
+  </div>
+
+  <div class="coming-soon">
+    Week 2 entry coming soon.
+    <span>Updated every Monday — check back next week.</span>
+  </div>
+</div>
+
+<!-- ══ RESEARCH ══ -->
+<div class="section" id="sec-research">
+
+  <div class="research-card">
+    <div class="rc-hd">
+      <div><div class="rc-sym">MSFT</div><div class="rc-name">Microsoft Corporation · Core Holding</div></div>
+      <div>
+        <span class="td-rating rat-buy" style="font-size:11px;padding:5px 12px;">BUY</span>
+      </div>
+    </div>
+    <div class="rc-body">
+      <h5>Why It's in the Core Tier</h5>
+      <p>Microsoft has three separate businesses that would each be large companies on their own: Azure (cloud), Office 365 (productivity software), and LinkedIn/gaming. This diversification is rare. When one segment slows, the others tend to compensate. Azure's revenue has been growing above 25% year-over-year, which is exceptional for a company this size.</p>
+      <h5>The Investment Thesis</h5>
+      <p>Microsoft's shift to subscription-based revenue (Azure, Office 365, Xbox Game Pass) means revenue is recurring and predictable — the opposite of a one-time sale model. Recurring revenue is valued at a premium by the market because it's more reliable. The integration of OpenAI's technology into Copilot across all Microsoft products gives it an AI distribution advantage that will take years for competitors to replicate at the same scale.</p>
+      <h5>Key Risks</h5>
+      <p>Valuation is the main risk. A P/E above 35 means the market is pricing in continued strong growth — if Azure slows, the multiple could compress quickly. Regulatory pressure in Europe around Teams bundling is an ongoing concern. Competition from Google Cloud and AWS in the cloud segment is intensifying.</p>
+      <h5>What I Learned Researching This</h5>
+      <p>I didn't understand the difference between product revenue and subscription revenue before this project. Microsoft's move from selling Office as a one-time purchase to charging monthly changed the entire character of its financials — it made earnings more predictable, which reduces risk and supports a higher valuation multiple. That's a lesson that applies far beyond just Microsoft.</p>
+    </div>
+    <div class="rc-metrics">
+      <div class="rcm"><div class="rm-l">Beta</div><div class="rm-v">1.04</div></div>
+      <div class="rcm"><div class="rm-l">P/E</div><div class="rm-v">~35</div></div>
+      <div class="rcm"><div class="rm-l">My Score</div><div class="rm-v">84/100</div></div>
+      <div class="rcm"><div class="rm-l">Sector</div><div class="rm-v" style="font-size:12px">Technology</div></div>
+    </div>
+  </div>
+
+  <div class="research-card">
+    <div class="rc-hd">
+      <div><div class="rc-sym">NVDA</div><div class="rc-name">NVIDIA Corporation · Growth Bet</div></div>
+      <div><span class="td-rating rat-watch" style="font-size:11px;padding:5px 12px;">WATCH</span></div>
+    </div>
+    <div class="rc-body">
+      <h5>Why It's in the Growth Tier</h5>
+      <p>NVIDIA's beta above 1.8 immediately flags it as volatile — it moves significantly more than the market. But the reason it belongs here isn't just the volatility, it's the nature of the business. GPU demand for AI training is currently growing faster than NVIDIA can manufacture chips. That's a rare supply constraint problem, which usually means pricing power and strong margins.</p>
+      <h5>The Investment Thesis</h5>
+      <p>NVIDIA is not just a chip company anymore — it's the infrastructure layer of the AI economy. Every major cloud provider (Amazon, Google, Microsoft, Meta) is spending billions on H100 and Blackwell GPUs to build AI capacity. NVIDIA's CUDA software platform, built over 15 years, creates a switching cost moat that is genuinely hard to replicate. AMD is trying, but software ecosystems don't get built overnight.</p>
+      <h5>Key Risks</h5>
+      <p>The valuation is the elephant in the room. A P/E above 50 means the market expects NVIDIA to keep growing at a rate that would be extraordinary for any company. If AI capex spending slows — if companies decide they've built enough GPU capacity — NVIDIA's revenue could drop sharply. China export restrictions also cut off a meaningful revenue opportunity.</p>
+      <h5>What I Learned Researching This</h5>
+      <p>I learned the difference between a cyclical business and a secular growth story. Semiconductors used to be deeply cyclical — demand surged and crashed with PC and smartphone cycles. NVIDIA's AI exposure may have structurally changed that, but I'm not certain. That uncertainty is why it's a Growth Bet at 5% allocation rather than a Core Holding at 10%.</p>
+    </div>
+    <div class="rc-metrics">
+      <div class="rcm"><div class="rm-l">Beta</div><div class="rm-v">1.89</div></div>
+      <div class="rcm"><div class="rm-l">P/E</div><div class="rm-v">~50</div></div>
+      <div class="rcm"><div class="rm-l">My Score</div><div class="rm-v">74/100</div></div>
+      <div class="rcm"><div class="rm-l">Sector</div><div class="rm-v" style="font-size:12px">Semiconductors</div></div>
+    </div>
+  </div>
+
+  <div class="research-card">
+    <div class="rc-hd">
+      <div><div class="rc-sym">KO</div><div class="rc-name">The Coca-Cola Company · Core Holding</div></div>
+      <div><span class="td-rating rat-buy" style="font-size:11px;padding:5px 12px;">BUY</span></div>
+    </div>
+    <div class="rc-body">
+      <h5>Why It's in the Core Tier</h5>
+      <p>Beta of 0.61 — Coca-Cola barely moves when the market moves. That's the definition of a defensive stock. In 2022, when the S&P 500 fell over 18%, KO dropped less than 3%. That kind of stability has a real portfolio value, especially when paired with more volatile positions.</p>
+      <h5>The Investment Thesis</h5>
+      <p>Warren Buffett has owned Coca-Cola since 1988 and still holds it. His reasoning is simple: the brand is worth more than any individual product. Coke has distribution in over 200 countries, a portfolio of 500+ beverages beyond just cola, and pricing power — they can raise prices modestly without losing significant volume because the brand loyalty is that strong. That's a textbook economic moat.</p>
+      <h5>Key Risks</h5>
+      <p>Health trends are the long-term headwind. Consumer preferences are shifting toward low-sugar and functional beverages, and KO has been slower to adapt than rivals in some markets. Currency risk is also real — with revenue in 200 countries, a strong dollar suppresses reported earnings even when the business itself is doing well.</p>
+      <h5>What I Learned Researching This</h5>
+      <p>Researching KO taught me what a Dividend Aristocrat actually means — it's a company that has raised its dividend for 25+ consecutive years. KO has done it for over 60. That consistency is only possible with very stable free cash flow, which is itself a signal of competitive moat. High, stable dividends are a form of proof, not just an income feature.</p>
+    </div>
+    <div class="rc-metrics">
+      <div class="rcm"><div class="rm-l">Beta</div><div class="rm-v">0.61</div></div>
+      <div class="rcm"><div class="rm-l">P/E</div><div class="rm-v">~24</div></div>
+      <div class="rcm"><div class="rm-l">My Score</div><div class="rm-v">80/100</div></div>
+      <div class="rcm"><div class="rm-l">Sector</div><div class="rm-v" style="font-size:12px">Consumer Staples</div></div>
+    </div>
+  </div>
+
+  <div class="coming-soon">
+    Research reports for IONQ and JPM coming in Week 2.
+    <span>New reports added weekly as the project develops.</span>
+  </div>
+</div>
+
+<!-- ══ ABOUT ══ -->
+<div class="section" id="sec-about">
+  <div class="about-hero">
+    <div class="about-av">G</div>
+    <div>
+      <h3>Gian De Gruccio</h3>
+      <div class="ah-sub">Finance Major · Community College → Transfer Candidate</div>
+      <p>I built this project to close the gap between studying finance and actually doing it. My goal is to transfer into a four-year university as a Finance major, and I wanted something concrete to show — not just grades and coursework, but evidence that I understand how markets work and can build analytical frameworks to make sense of them. This watchlist is that evidence. Every pick has a thesis, every score has a methodology, and every journal entry is an honest account of what the data did versus what I expected.</p>
+    </div>
+  </div>
+
+  <div class="learned-card">
+    <h4>What I've Learned Building This</h4>
+    <div class="learned-item">
+      <div class="li-num">01</div>
+      <div class="li-body">
+        <h6>Finance is portfolio construction, not stock picking</h6>
+        <p>I started thinking this project was about finding good companies. It turned out to be about building a system — how much risk to take, how to balance stability and growth, and why diversification across sectors matters more than any individual pick.</p>
+      </div>
+    </div>
+    <div class="learned-item">
+      <div class="li-num">02</div>
+      <div class="li-body">
+        <h6>Beta changed how I think about risk</h6>
+        <p>Before this project, I thought risk meant "could this company go bankrupt." Beta taught me that risk also means how much a stock amplifies market moves — and that a portfolio full of high-beta stocks gets hurt badly in downturns even if every company in it is fundamentally solid.</p>
+      </div>
+    </div>
+    <div class="learned-item">
+      <div class="li-num">03</div>
+      <div class="li-body">
+        <h6>Valuation is a humbling exercise</h6>
+        <p>Scoring NVIDIA's valuation made me realize how much uncertainty is baked into a high P/E stock. You're not just paying for what the company is — you're paying for what you believe it will become. That's a different kind of judgment, and it's harder than it looks.</p>
+      </div>
+    </div>
+    <div class="learned-item">
+      <div class="li-num">04</div>
+      <div class="li-body">
+        <h6>Consistency matters more than any single insight</h6>
+        <p>The most valuable part of this project isn't the website — it's the habit of checking prices, reading earnings summaries, and updating the journal every week. Real portfolio managers don't make one brilliant call; they make thousands of small, disciplined decisions over time.</p>
       </div>
     </div>
   </div>
 
-  <!-- METHODOLOGY -->
-  <div class="methodology">
+  <div class="method-grid">
     <div class="method-card">
       <h4><span style="color:var(--gold)">◆</span> Core Selection Criteria</h4>
       <ul>
@@ -922,390 +532,323 @@
         <li>Positive free cash flow for 5+ consecutive years</li>
         <li>Dividend history or consistent buyback program</li>
         <li>Industry leadership with defensible competitive moat</li>
-        <li>Strong balance sheet — low debt-to-equity ratio</li>
+        <li>Low debt-to-equity relative to sector peers</li>
       </ul>
     </div>
     <div class="method-card">
       <h4><span style="color:var(--red)">◆</span> Growth Selection Criteria</h4>
       <ul>
-        <li>High total addressable market (TAM) with early penetration</li>
-        <li>Revenue growth rate above 20% YoY</li>
-        <li>Structural tailwind (AI, quantum, energy drinks, etc.)</li>
+        <li>High total addressable market with early penetration</li>
+        <li>Revenue growth rate above 20% year-over-year</li>
+        <li>Structural tailwind — AI, quantum, energy drinks, etc.</li>
         <li>High beta accepted — volatility is the price of upside</li>
-        <li>Smaller or mid-cap with room to 10x if thesis plays out</li>
-        <li>Position sizing discipline — never over-allocate to one growth bet</li>
+        <li>Smaller or mid-cap with room to grow significantly</li>
+        <li>Position sizing discipline — max 5% per growth bet</li>
       </ul>
     </div>
   </div>
-
-  <!-- ABOUT -->
-  <div class="about">
-    <div class="about-avatar">G</div>
-    <div>
-      <h4>About This Project</h4>
-      <p>I built this as a student pursuing a mathematical degree and working toward going to a four-year university. This watchlist reflects real research into risk-tiered investing — understanding the difference between capital preservation and capital growth is one of the first principles of portfolio management. Every pick here has a thesis, and every thesis is backed by fundamentals I can defend. This project is my way of doing finance, not just studying it.</p>
-    </div>
-  </div>
-
-  <div class="disclaimer">
-    <p><strong>Educational purposes only.</strong> This is a student finance project. Nothing on this page constitutes financial advice or a recommendation to buy or sell any security. All live prices are pulled from Finnhub's free API. Fundamental stats (beta, P/E, 52-week ranges) are approximate reference values for illustrative purposes. Always conduct your own research before making investment decisions.</p>
-  </div>
-
-</main>
-
-<!-- COMPARE BAR -->
-<div class="compare-bar" id="compare-bar" onclick="openCompare()">
-  <span id="compare-count">0 selected</span>
-  <span>→ Compare</span>
-</div>
-
-<!-- COMPARE MODAL -->
-<div class="modal-overlay" id="modal-overlay" onclick="closeCompare(event)">
-  <div class="modal">
-    <div class="modal-hd">
-      <h3>Side-by-Side Comparison</h3>
-      <button class="modal-close" onclick="closeCompareBtn()">✕</button>
-    </div>
-    <div class="compare-grid" id="compare-grid"></div>
-  </div>
+  <div class="disclaimer"><p><strong>Educational purposes only.</strong> This is a student finance project built and maintained by Gian De Gruccio. Nothing here constitutes financial advice. All analysis represents the author's own learning process.</p></div>
 </div>
 
 <script>
 const API_KEY = 'd8p1q59r01qp954u56rgd8p1q59r01qp954u56s0';
 
 const CORE = [
-  { ticker:'AAPL',  name:'Apple Inc.',           sector:'Technology',       beta:'0.81', pe:'31',  w52l:'164',  w52h:'260', w52pos:72, risk:30, thesis:"World's largest company by market cap. Massive cash reserves, loyal ecosystem, and consistent buybacks make this the quintessential defensive tech hold." },
-  { ticker:'MSFT',  name:'Microsoft Corp.',       sector:'Technology',       beta:'1.04', pe:'35',  w52l:'344',  w52h:'510', w52pos:65, risk:32, thesis:"Azure cloud growth plus dominant enterprise software. Recurring revenue model reduces cyclicality. AI Copilot integration adds a new long-term growth vector." },
-  { ticker:'JNJ',   name:'Johnson & Johnson',     sector:'Healthcare',       beta:'0.55', pe:'22',  w52l:'140',  w52h:'170', w52pos:60, risk:18, thesis:"Dividend King with 60+ consecutive years of dividend increases. Pharma, MedTech, and consumer health diversification act as a natural economic hedge." },
-  { ticker:'PG',    name:'Procter & Gamble',      sector:'Consumer Staples', beta:'0.59', pe:'26',  w52l:'155',  w52h:'183', w52pos:55, risk:15, thesis:"Household brands (Tide, Pampers, Gillette) create inelastic demand. People buy these regardless of recessions — the textbook definition of a defensive stock." },
-  { ticker:'JPM',   name:'JPMorgan Chase',        sector:'Financials',       beta:'1.10', pe:'13',  w52l:'185',  w52h:'285', w52pos:70, risk:35, thesis:"Most profitable bank in U.S. history. Diversified across retail, investment banking, and asset management limits single-sector exposure." },
-  { ticker:'KO',    name:'Coca-Cola Co.',         sector:'Consumer Staples', beta:'0.61', pe:'24',  w52l:'58',   w52h:'76',  w52pos:50, risk:14, thesis:"60-year Dividend Aristocrat with distribution in 200+ countries. Currency diversification and brand moat make this a classic compounding machine." },
-  { ticker:'WMT',   name:'Walmart Inc.',          sector:'Consumer Staples', beta:'0.53', pe:'37',  w52l:'76',   w52h:'110', w52pos:80, risk:20, thesis:"Discount retail thrives in downturns as consumers trade down. E-commerce and grocery pickup have reinvigorated growth without sacrificing core value." },
-  { ticker:'V',     name:'Visa Inc.',             sector:'Financials',       beta:'0.95', pe:'32',  w52l:'270',  w52h:'365', w52pos:68, risk:28, thesis:"Visa doesn't lend money — it takes a cut of every transaction. Asset-light, high-margin, and benefits from the global shift away from cash." },
-  { ticker:'BRK-B', name:'Berkshire Hathaway B',  sector:'Diversified',      beta:'0.90', pe:'21',  w52l:'400',  w52h:'530', w52pos:75, risk:25, thesis:"Owning Berkshire is owning a diversified portfolio managed by history's greatest capital allocator. Insurance, equities, and operating businesses in one." },
-  { ticker:'NEE',   name:'NextEra Energy',        sector:'Utilities',        beta:'0.58', pe:'20',  w52l:'62',   w52h:'92',  w52pos:45, risk:22, thesis:"World's largest producer of wind and solar energy. Regulated utility income provides stability while renewables growth provides long-term upside." },
+  {ticker:'AAPL', name:'Apple Inc.',          sector:'Technology',       beta:'0.81',pe:'31', w52l:'164',w52h:'260',w52p:72,risk:30,
+   scores:{fin:88,growth:75,val:65,risk:78,moat:95},
+   thesis:"World's largest company by market cap. Massive cash reserves, loyal ecosystem, and consistent buybacks make this the quintessential defensive tech hold."},
+  {ticker:'MSFT', name:'Microsoft Corp.',      sector:'Technology',       beta:'1.04',pe:'35', w52l:'344',w52h:'510',w52p:65,risk:32,
+   scores:{fin:92,growth:88,val:62,risk:75,moat:95},
+   thesis:"Azure cloud growth plus dominant enterprise software. Recurring revenue model reduces cyclicality. AI Copilot integration adds a compelling long-term growth vector."},
+  {ticker:'JNJ',  name:'Johnson & Johnson',    sector:'Healthcare',       beta:'0.55',pe:'22', w52l:'140',w52h:'170',w52p:60,risk:18,
+   scores:{fin:90,growth:55,val:72,risk:92,moat:85},
+   thesis:"Dividend King with 60+ consecutive years of dividend increases. Pharma, MedTech, and consumer health diversification acts as a natural economic hedge."},
+  {ticker:'PG',   name:'Procter & Gamble',     sector:'Consumer Staples', beta:'0.59',pe:'26', w52l:'155',w52h:'183',w52p:55,risk:15,
+   scores:{fin:88,growth:50,val:68,risk:94,moat:90},
+   thesis:"Household brands — Tide, Pampers, Gillette — create inelastic demand. People buy these regardless of recessions. The textbook definition of a defensive stock."},
+  {ticker:'JPM',  name:'JPMorgan Chase',        sector:'Financials',       beta:'1.10',pe:'13', w52l:'185',w52h:'285',w52p:70,risk:35,
+   scores:{fin:85,growth:68,val:82,risk:72,moat:88},
+   thesis:"Most profitable bank in U.S. history. Diversified across retail, investment banking, and asset management limits single-sector exposure significantly."},
+  {ticker:'KO',   name:'Coca-Cola Co.',         sector:'Consumer Staples', beta:'0.61',pe:'24', w52l:'58', w52h:'76', w52p:50,risk:14,
+   scores:{fin:85,growth:45,val:70,risk:95,moat:92},
+   thesis:"60-year Dividend Aristocrat with distribution in 200+ countries. Currency diversification and brand moat make this a classic capital-preservation holding."},
+  {ticker:'WMT',  name:'Walmart Inc.',          sector:'Consumer Staples', beta:'0.53',pe:'37', w52l:'76', w52h:'110',w52p:80,risk:20,
+   scores:{fin:82,growth:65,val:58,risk:90,moat:88},
+   thesis:"Discount retail thrives in downturns as consumers trade down. E-commerce and grocery pickup have reinvigorated growth without sacrificing core value proposition."},
+  {ticker:'V',    name:'Visa Inc.',             sector:'Financials',       beta:'0.95',pe:'32', w52l:'270',w52h:'365',w52p:68,risk:28,
+   scores:{fin:95,growth:72,val:65,risk:82,moat:96},
+   thesis:"Visa doesn't lend money — it takes a cut of every transaction. Asset-light, high-margin, and benefits structurally from the global shift away from cash."},
+  {ticker:'BRK-B',name:'Berkshire Hathaway B',  sector:'Diversified',      beta:'0.90',pe:'21', w52l:'400',w52h:'530',w52p:75,risk:25,
+   scores:{fin:94,growth:58,val:75,risk:85,moat:92},
+   thesis:"Owning Berkshire is owning a diversified portfolio managed by the greatest capital allocator in history. Insurance, equities, and operating businesses in one ticker."},
+  {ticker:'NEE',  name:'NextEra Energy',         sector:'Utilities',        beta:'0.58',pe:'20', w52l:'62', w52h:'92', w52p:45,risk:22,
+   scores:{fin:78,growth:62,val:74,risk:90,moat:80},
+   thesis:"World's largest producer of wind and solar energy. Regulated utility income provides stability while renewables growth provides long-term upside — a rare combination."},
 ];
 
 const GROWTH = [
-  { ticker:'NVDA',  name:'NVIDIA Corp.',          sector:'Semiconductors',    beta:'1.89', pe:'50',  w52l:'75',   w52h:'175', w52pos:85, risk:80, thesis:"Infrastructure layer of the AI boom. Data center GPU demand from hyperscalers grows faster than supply. High valuation reflects enormous expectations." },
-  { ticker:'PLTR',  name:'Palantir Technologies', sector:'Data / AI',         beta:'2.50', pe:'180', w52l:'18',   w52h:'125', w52pos:90, risk:88, thesis:"Government and enterprise AI analytics platform gaining commercial traction fast. Extremely high valuation and volatile price action — pure growth play." },
-  { ticker:'SMCI',  name:'Super Micro Computer',  sector:'AI Infrastructure', beta:'1.95', pe:'18',  w52l:'18',   w52h:'120', w52pos:60, risk:85, thesis:"Designs high-density server systems for AI workloads. Direct beneficiary of hyperscaler capex cycles. Volatile due to past accounting scrutiny." },
-  { ticker:'IONQ',  name:'IonQ Inc.',             sector:'Quantum Computing',  beta:'2.10', pe:'N/A', w52l:'6',    w52h:'55',  w52pos:70, risk:95, thesis:"Pure-play publicly traded quantum computing company. The industry is pre-revenue at scale but could be transformational. Highly speculative." },
-  { ticker:'CELH',  name:'Celsius Holdings',      sector:'Consumer / Bev.',   beta:'2.30', pe:'45',  w52l:'22',   w52h:'90',  w52pos:35, risk:78, thesis:"Fastest-growing energy drink brand in the U.S., challenging Monster and Red Bull. High beta reflects the all-or-nothing nature of CPG growth stories." },
+  {ticker:'NVDA', name:'NVIDIA Corp.',          sector:'Semiconductors',   beta:'1.89',pe:'50', w52l:'75', w52h:'175',w52p:85,risk:80,
+   scores:{fin:78,growth:96,val:42,risk:45,moat:90},
+   thesis:"Infrastructure layer of the AI boom. Data center GPU demand from hyperscalers grows faster than supply. High valuation reflects enormous market expectations."},
+  {ticker:'PLTR', name:'Palantir Technologies', sector:'Data / AI',        beta:'2.50',pe:'180',w52l:'18', w52h:'125',w52p:90,risk:88,
+   scores:{fin:55,growth:82,val:22,risk:35,moat:78},
+   thesis:"Government and enterprise AI analytics gaining commercial traction. Extremely high valuation and volatile price action — pure high-conviction growth play."},
+  {ticker:'SMCI', name:'Super Micro Computer',  sector:'AI Infrastructure',beta:'1.95',pe:'18', w52l:'18', w52h:'120',w52p:60,risk:85,
+   scores:{fin:60,growth:88,val:68,risk:40,moat:62},
+   thesis:"Designs high-density server systems for AI workloads. Direct beneficiary of hyperscaler capex cycles. Volatile due to past accounting scrutiny."},
+  {ticker:'IONQ', name:'IonQ Inc.',             sector:'Quantum Computing', beta:'2.10',pe:'N/A',w52l:'6',  w52h:'55', w52p:70,risk:95,
+   scores:{fin:30,growth:70,val:28,risk:25,moat:72},
+   thesis:"Pure-play publicly traded quantum computing company. Pre-revenue at scale but potentially transformational if the technology matures. Highly speculative."},
+  {ticker:'CELH', name:'Celsius Holdings',       sector:'Consumer / Bev.', beta:'2.30',pe:'45', w52l:'22', w52h:'90', w52p:35,risk:78,
+   scores:{fin:65,growth:85,val:50,risk:42,moat:70},
+   thesis:"Fastest-growing energy drink brand in the U.S., challenging Monster and Red Bull. High beta reflects the all-or-nothing nature of CPG growth stories."},
 ];
 
-const ALL = [...CORE, ...GROWTH];
+const ALL = [...CORE,...GROWTH];
 const prices = {};
-let compareSet = new Set();
+
+// ── SCORE CALC ──
+function calcScore(s) {
+  return Math.round(s.fin*.25 + s.growth*.25 + s.val*.20 + s.risk*.15 + s.moat*.15);
+}
+function getGrade(score) {
+  if(score>=80)return'A'; if(score>=70)return'B'; if(score>=60)return'C'; return'D';
+}
+function getRating(score) {
+  if(score>=75)return{label:'BUY',cls:'rat-buy'}; if(score>=55)return{label:'WATCH',cls:'rat-watch'}; return{label:'AVOID',cls:'rat-avoid'};
+}
 
 // ── BUILD CARDS ──
 function buildCard(s, tier) {
-  const safeTicker = s.ticker.replace('-','_');
+  const safe = s.ticker.replace('-','_');
+  const score = calcScore(s.scores);
+  const grade = getGrade(score);
   const div = document.createElement('div');
   div.className = `card ${tier}`;
-  div.dataset.tier = tier;
-  div.dataset.sector = s.sector;
-  div.id = `card-${safeTicker}`;
-  div.style.animationDelay = `${Math.random()*0.3}s`;
+  div.dataset.tier = tier; div.dataset.sector = s.sector;
+  div.id = `card-${safe}`;
+  div.style.animationDelay = `${(Math.random()*.25).toFixed(2)}s`;
   div.innerHTML = `
-    <div class="compare-toggle" id="ct-${safeTicker}" onclick="toggleCompare(event,'${s.ticker}')">+</div>
-    <div class="card-top">
+    <div class="score-badge grade-${grade}">${grade}</div>
+    <div class="ctop">
       <div>
-        <div class="ticker-sym">${s.ticker}</div>
-        <div class="co-name">${s.name}</div>
-        <span class="sector-tag">${s.sector}</span>
+        <div class="csym">${s.ticker}</div>
+        <div class="cname">${s.name}</div>
+        <span class="ctag">${s.sector}</span>
       </div>
-      <div class="price-col">
-        <div class="live-price loading" id="price-${safeTicker}">Loading…</div>
-        <div class="live-chg" id="chg-${safeTicker}"></div>
+      <div class="cprice" style="margin-right:36px">
+        <div class="cpval loading" id="price-${safe}">Loading…</div>
+        <div class="cpchg" id="chg-${safe}"></div>
       </div>
     </div>
-    <div class="sparkline-wrap">
-      <canvas id="spark-${safeTicker}" height="40"></canvas>
-    </div>
-    <p class="thesis-text">${s.thesis}</p>
+    <div class="spark-wrap"><canvas id="spark-${safe}" height="36"></canvas></div>
+    <p class="thesis-txt">${s.thesis}</p>
     <div class="stat-row">
-      <div class="stat-chip">Beta<b>${s.beta}</b></div>
-      <div class="stat-chip">P/E<b>${s.pe}</b></div>
-      <div class="stat-chip">52W<b>${s.w52l}–${s.w52h}</b></div>
-    </div>
-    <div class="wk52-wrap">
-      <div class="wk52-label"><span>${s.w52l}</span><span>52-Week Range</span><span>${s.w52h}</span></div>
-      <div class="wk52-track">
-        <div class="wk52-fill" style="width:${s.w52pos}%"></div>
-        <div class="wk52-dot" style="left:${s.w52pos}%"></div>
-      </div>
+      <div class="schip">Beta<b>${s.beta}</b></div>
+      <div class="schip">P/E<b>${s.pe}</b></div>
+      <div class="schip">Score<b>${score}/100</b></div>
     </div>
     <div class="risk-row">
-      <span class="risk-lbl">Risk</span>
-      <div class="risk-track"><div class="risk-fill" style="width:${s.risk}%"></div></div>
-      <span class="risk-lbl">${s.risk}/100</span>
-    </div>
-  `;
+      <span class="rl">Risk</span>
+      <div class="rtrack"><div class="rfill" style="width:${s.risk}%"></div></div>
+      <span class="rl">${s.risk}/100</span>
+    </div>`;
   return div;
 }
 
-document.getElementById('core-grid').append(...CORE.map(s => buildCard(s,'core')));
-document.getElementById('growth-grid').append(...GROWTH.map(s => buildCard(s,'growth')));
+document.getElementById('core-grid').append(...CORE.map(s=>buildCard(s,'core')));
+document.getElementById('growth-grid').append(...GROWTH.map(s=>buildCard(s,'growth')));
+
+// ── SCORE TABLE ──
+function buildScoreTable(sortKey='score', asc=false) {
+  const rows = ALL.map(s => {
+    const sc = s.scores;
+    const score = calcScore(sc);
+    return {...s, score, grade:getGrade(score), rating:getRating(score)};
+  });
+  rows.sort((a,b) => {
+    const av = a[sortKey] ?? a.scores?.[sortKey] ?? 0;
+    const bv = b[sortKey] ?? b.scores?.[sortKey] ?? 0;
+    if(typeof av==='string') return asc ? av.localeCompare(bv) : bv.localeCompare(av);
+    return asc ? av-bv : bv-av;
+  });
+  const tbody = document.getElementById('score-tbody');
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td><div class="td-sym">${r.ticker}</div><div class="td-name">${r.name}</div></td>
+      <td><div class="td-bar"><span class="td-score">${r.score}</span><div class="td-bar-track"><div class="td-bar-fill" style="width:${r.score}%"></div></div></div></td>
+      <td><span class="td-grade grade-${r.grade}" style="background:${r.grade==='A'?'var(--green-dim)':r.grade==='B'?'var(--blue-dim)':r.grade==='C'?'var(--gold-dim)':'var(--red-dim)'};color:${r.grade==='A'?'var(--green)':r.grade==='B'?'var(--blue)':r.grade==='C'?'var(--gold)':'var(--red)'}">${r.grade}</span></td>
+      <td><div class="mini-scores"><span class="ms"><b>${r.scores.fin}</b></span></div></td>
+      <td><div class="mini-scores"><span class="ms"><b>${r.scores.growth}</b></span></div></td>
+      <td><div class="mini-scores"><span class="ms"><b>${r.scores.val}</b></span></div></td>
+      <td><div class="mini-scores"><span class="ms"><b>${r.scores.risk}</b></span></div></td>
+      <td><div class="mini-scores"><span class="ms"><b>${r.scores.moat}</b></span></div></td>
+      <td><span class="td-rating ${r.rating.cls}">${r.rating.label}</span></td>
+    </tr>`).join('');
+}
+let sortAsc = false, lastSort = 'score';
+function sortTable(key) {
+  if(key===lastSort) sortAsc=!sortAsc; else sortAsc=false;
+  lastSort=key;
+  document.querySelectorAll('thead th').forEach(th=>th.classList.remove('sorted'));
+  event.target.classList.add('sorted');
+  buildScoreTable(key,sortAsc);
+}
+buildScoreTable();
 
 // ── SPARKLINE ──
-function drawSparkline(canvasId, data, isUp) {
-  const canvas = document.getElementById(canvasId);
-  if (!canvas) return;
+function drawSpark(id, price, change) {
+  const canvas = document.getElementById(id);
+  if(!canvas) return;
+  const w = canvas.offsetWidth||280, h = 36;
+  canvas.width = w; canvas.height = h;
   const ctx = canvas.getContext('2d');
-  canvas.width = canvas.offsetWidth || 280;
-  canvas.height = 40;
-  const w = canvas.width, h = canvas.height;
-  const min = Math.min(...data), max = Math.max(...data);
-  const range = max - min || 1;
-  const pts = data.map((v,i) => ({ x: (i/(data.length-1))*w, y: h - ((v-min)/range)*(h-6)-3 }));
-  ctx.clearRect(0,0,w,h);
-  const color = isUp ? '#22C55E' : '#EF4444';
-  // fill
-  const grad = ctx.createLinearGradient(0,0,0,h);
-  grad.addColorStop(0, isUp ? 'rgba(34,197,94,0.18)' : 'rgba(239,68,68,0.18)');
-  grad.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.beginPath();
-  ctx.moveTo(pts[0].x, h);
-  pts.forEach(p => ctx.lineTo(p.x, p.y));
-  ctx.lineTo(pts[pts.length-1].x, h);
-  ctx.closePath();
-  ctx.fillStyle = grad;
-  ctx.fill();
-  // line
-  ctx.beginPath();
-  pts.forEach((p,i) => i===0 ? ctx.moveTo(p.x,p.y) : ctx.lineTo(p.x,p.y));
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-}
-
-function makeSparkData(price, change) {
-  // Simulate ~7-day sparkline from current price and daily change
   const pts = [];
-  let v = price - change * 6;
-  for (let i = 0; i < 7; i++) {
-    v += change * (0.5 + Math.random());
-    pts.push(Math.max(v, price * 0.85));
-  }
-  pts[pts.length-1] = price;
-  return pts;
+  let v = price - change*6;
+  for(let i=0;i<8;i++){v+=change*(0.4+Math.random()*.8);pts.push(Math.max(v,price*.82));}
+  pts[pts.length-1]=price;
+  const mn=Math.min(...pts), mx=Math.max(...pts), rng=mx-mn||1;
+  const mapped = pts.map((p,i)=>({x:(i/(pts.length-1))*w, y:h-((p-mn)/rng)*(h-6)-3}));
+  const color = change>=0?'#22C55E':'#EF4444';
+  const grad = ctx.createLinearGradient(0,0,0,h);
+  grad.addColorStop(0,change>=0?'rgba(34,197,94,.15)':'rgba(239,68,68,.15)');
+  grad.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.beginPath(); ctx.moveTo(mapped[0].x,h);
+  mapped.forEach(p=>ctx.lineTo(p.x,p.y));
+  ctx.lineTo(mapped[mapped.length-1].x,h); ctx.closePath();
+  ctx.fillStyle=grad; ctx.fill();
+  ctx.beginPath(); mapped.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
+  ctx.strokeStyle=color; ctx.lineWidth=1.5; ctx.stroke();
 }
 
-// ── FETCH & UPDATE ──
-async function fetchQuote(ticker) {
+// ── FETCH ──
+async function fetchQ(ticker) {
   const r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${API_KEY}`);
-  if (!r.ok) throw new Error('HTTP ' + r.status);
+  if(!r.ok) throw new Error('http '+r.status);
   return r.json();
 }
-
 async function updateCard(s) {
   const safe = s.ticker.replace('-','_');
-  const priceEl = document.getElementById(`price-${safe}`);
-  const chgEl   = document.getElementById(`chg-${safe}`);
+  const pe = document.getElementById(`price-${safe}`);
+  const ce = document.getElementById(`chg-${safe}`);
   try {
-    const d = await fetchQuote(s.ticker);
-    if (!d.c) throw new Error('no data');
-    prices[s.ticker] = { c: d.c, d: d.d, dp: d.dp, pc: d.pc };
-    priceEl.textContent = `$${d.c.toFixed(2)}`;
-    priceEl.classList.remove('loading');
-    const sign = d.d >= 0 ? '+' : '';
-    chgEl.textContent = `${sign}${d.d.toFixed(2)} (${sign}${d.dp.toFixed(2)}%)`;
-    chgEl.className = `live-chg ${d.d >= 0 ? 'up' : 'down'}`;
-    drawSparkline(`spark-${safe}`, makeSparkData(d.c, d.d / 6), d.d >= 0);
+    const d = await fetchQ(s.ticker);
+    if(!d.c) throw new Error('no data');
+    prices[s.ticker]={c:d.c,d:d.d,dp:d.dp,pc:d.pc};
+    pe.textContent=`$${d.c.toFixed(2)}`; pe.classList.remove('loading');
+    const sign=d.d>=0?'+':'';
+    ce.textContent=`${sign}${d.d.toFixed(2)} (${sign}${d.dp.toFixed(2)}%)`;
+    ce.className=`cpchg ${d.d>=0?'up':'down'}`;
+    drawSpark(`spark-${safe}`,d.c,d.d);
   } catch {
-    priceEl.textContent = 'N/A';
-    priceEl.classList.remove('loading');
-    chgEl.textContent = '—';
+    pe.textContent='N/A'; pe.classList.remove('loading'); ce.textContent='—';
   }
 }
-
 async function loadAllPrices() {
-  const btn = document.getElementById('refresh-btn');
-  btn.disabled = true; btn.textContent = '↻ Fetching…';
-  for (let i = 0; i < ALL.length; i++) {
+  const btn=document.getElementById('rfbtn');
+  btn.disabled=true; btn.textContent='↻ Loading…';
+  for(let i=0;i<ALL.length;i++){
     await updateCard(ALL[i]);
-    if (i < ALL.length-1) await new Promise(r => setTimeout(r, 220));
+    if(i<ALL.length-1) await new Promise(r=>setTimeout(r,220));
   }
-  updateHero();
-  updateSimulator();
-  updateTicker();
-  const now = new Date();
-  document.getElementById('hero-updated').textContent =
-    now.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
-  btn.disabled = false; btn.textContent = '↻ Refresh Prices';
+  updateKPIs(); updateSim(); updateTicker();
+  const now=new Date();
+  document.getElementById('kv-upd').textContent=now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  btn.disabled=false; btn.textContent='↻ Refresh';
 }
 
-// ── HERO STATS ──
-function updateHero() {
-  const perStock = 10000 / 15;
-  let totalVal = 0, totalPrev = 0, gainers = 0;
-  ALL.forEach(s => {
-    const p = prices[s.ticker];
-    if (!p) { totalVal += perStock; totalPrev += perStock; return; }
-    const allocation = perStock;
-    const shares = allocation / p.pc;
-    totalVal  += shares * p.c;
-    totalPrev += allocation;
-    if (p.d > 0) gainers++;
+// ── KPIs ──
+function updateKPIs() {
+  const per=10000/15; let tv=0,tp=0,g=0;
+  ALL.forEach(s=>{
+    const p=prices[s.ticker];
+    if(!p){tv+=per;tp+=per;return;}
+    const sh=per/p.pc; tv+=sh*p.c; tp+=per; if(p.d>0)g++;
   });
-  const pnl = totalVal - totalPrev;
-  const pct = (pnl / totalPrev) * 100;
-  document.getElementById('hero-total').textContent = `$${totalVal.toFixed(2)}`;
-  const pnlEl = document.getElementById('hero-pnl');
-  pnlEl.textContent = `${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)} (${pct >= 0?'+':''}${pct.toFixed(2)}%)`;
-  pnlEl.className = `hs-value ${pnl >= 0 ? 'up' : 'down'}`;
-  document.getElementById('hero-gainers').textContent = `${gainers} / 15`;
+  const pnl=tv-tp, pct=(pnl/tp)*100;
+  document.getElementById('kv-total').textContent=`$${tv.toFixed(2)}`;
+  const pe=document.getElementById('kv-pnl');
+  pe.textContent=`${pnl>=0?'+':''}$${Math.abs(pnl).toFixed(2)} (${pct>=0?'+':''}${pct.toFixed(2)}%)`;
+  pe.className=`kv ${pnl>=0?'up':'down'}`;
+  document.getElementById('kv-gain').textContent=`${g} / 15`;
+  const top=[...ALL].sort((a,b)=>calcScore(b.scores)-calcScore(a.scores))[0];
+  document.getElementById('kv-top').textContent=`${top.ticker} · ${calcScore(top.scores)}/100`;
 }
 
 // ── SIMULATOR ──
-function updateSimulator() {
-  const capital = parseInt(document.getElementById('sim-slider').value);
-  document.getElementById('sim-amount').textContent = `$${capital.toLocaleString()}`;
-  const perStock = capital / 15;
-  const grid = document.getElementById('sim-grid');
-  grid.innerHTML = '';
-  let totalVal = 0;
-  ALL.forEach(s => {
-    const p = prices[s.ticker];
-    const price  = p ? p.c  : null;
-    const prevCl = p ? p.pc : null;
-    const shares = prevCl ? perStock / prevCl : 0;
-    const val    = price  ? shares * price    : perStock;
-    totalVal += val;
-    const row = document.createElement('div');
-    row.className = 'sim-row';
-    const pct = prevCl ? ((price - prevCl)/prevCl*100) : 0;
-    row.innerHTML = `
-      <div>
-        <div class="sr-sym">${s.ticker}</div>
-        <div class="sr-alloc">$${perStock.toFixed(0)} → ${shares.toFixed(3)} sh</div>
-      </div>
-      <div class="sr-val" style="color:${pct>=0?'var(--green)':'var(--red)'}">
-        $${val.toFixed(2)}
-      </div>`;
+function updateSim() {
+  const cap=parseInt(document.getElementById('sim-slider').value);
+  document.getElementById('sim-amt').textContent=`$${cap.toLocaleString()}`;
+  const per=cap/15; const grid=document.getElementById('sim-grid');
+  grid.innerHTML=''; let tv=0;
+  ALL.forEach(s=>{
+    const p=prices[s.ticker];
+    const sh=p?per/p.pc:0, val=p?sh*p.c:per;
+    tv+=val;
+    const pct=p?((p.c-p.pc)/p.pc*100):0;
+    const row=document.createElement('div'); row.className='sim-row';
+    row.innerHTML=`<div><div class="sr-sym">${s.ticker}</div><div class="sr-alloc">$${per.toFixed(0)}</div></div><div class="sr-val" style="color:${pct>=0?'var(--green)':'var(--red)'}">$${val.toFixed(2)}</div>`;
     grid.appendChild(row);
   });
-  const pnl = totalVal - capital;
-  const ret = (pnl / capital) * 100;
-  const tv = document.getElementById('sim-total-val');
-  tv.textContent = `$${totalVal.toFixed(2)}`;
-  tv.className = `st-value ${pnl >= 0 ? 'up' : 'down'}`;
-  const tp = document.getElementById('sim-total-pnl');
-  tp.textContent = `${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)} today`;
-  tp.className = `st-pnl ${pnl >= 0 ? 'up' : 'down'}`;
-  const tr = document.getElementById('sim-return');
-  tr.textContent = `${ret >= 0 ? '+' : ''}${ret.toFixed(3)}%`;
-  tr.className = `st-value ${ret >= 0 ? 'up' : 'down'}`;
+  const pnl=tv-cap, ret=(pnl/cap)*100;
+  const tv_el=document.getElementById('st-val');
+  tv_el.textContent=`$${tv.toFixed(2)}`; tv_el.className=`st-val ${pnl>=0?'up':'down'}`;
+  const pnl_el=document.getElementById('st-pnl');
+  pnl_el.textContent=`${pnl>=0?'+':''}$${pnl.toFixed(2)} today`; pnl_el.className=`st-pnl ${pnl>=0?'up':'down'}`;
+  const ret_el=document.getElementById('st-ret');
+  ret_el.textContent=`${ret>=0?'+':''}${ret.toFixed(3)}%`; ret_el.className=`st-val ${ret>=0?'up':'down'}`;
 }
 
-// ── TICKER TAPE ──
+// ── TICKER ──
 function updateTicker() {
-  const track = document.getElementById('ticker-track');
-  let html = '';
-  const items = ALL.map(s => {
-    const p = prices[s.ticker];
-    const price = p ? `$${p.c.toFixed(2)}` : '…';
-    const chg   = p ? `${p.d >= 0 ? '+' : ''}${p.dp.toFixed(2)}%` : '';
-    const cls   = p ? (p.d >= 0 ? 'up' : 'down') : 'flat';
-    return `<span class="ticker-item"><span class="t-sym">${s.ticker}</span><span class="t-price">${price}</span><span class="t-chg ${cls}">${chg}</span></span>`;
+  const items=ALL.map(s=>{
+    const p=prices[s.ticker];
+    const price=p?`$${p.c.toFixed(2)}`:'…';
+    const chg=p?`${p.d>=0?'+':''}${p.dp.toFixed(2)}%`:'';
+    const cls=p?(p.d>=0?'up':'down'):'flat';
+    return `<span class="ti"><span class="ts">${s.ticker}</span><span class="tp">${price}</span><span class="tc ${cls}">${chg}</span></span>`;
   }).join('');
-  // duplicate for seamless loop
-  track.innerHTML = items + items;
-}
-
-// ── MARKET STATUS ──
-function checkMarketStatus() {
-  const now = new Date();
-  const et = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
-  const day = et.getDay();
-  const h   = et.getHours() + et.getMinutes()/60;
-  const open = day >= 1 && day <= 5 && h >= 9.5 && h < 16;
-  const dot  = document.getElementById('status-dot');
-  const txt  = document.getElementById('status-text');
-  dot.className = `status-dot ${open ? '' : 'closed'}`;
-  txt.textContent = open ? 'Market Open' : 'Market Closed';
+  document.getElementById('ticker-track').innerHTML=items+items;
 }
 
 // ── FILTER ──
-function filterCards(filter, btn) {
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+function filterCards(f,btn) {
+  document.querySelectorAll('.fb').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  document.querySelectorAll('.card').forEach(c=>{
+    const show=f==='all'||c.dataset.tier===f||c.dataset.sector===f;
+    c.style.display=show?'':'none';
+  });
+}
+
+// ── SECTION NAV ──
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
   btn.classList.add('active');
-  document.querySelectorAll('.card').forEach(c => {
-    const show = filter === 'all' || c.dataset.tier === filter || c.dataset.sector === filter;
-    c.style.display = show ? '' : 'none';
-  });
+  const hb=document.getElementById('hero-band');
+  hb.style.display=id==='watchlist'?'':'none';
 }
 
-// ── COMPARE ──
-function toggleCompare(e, ticker) {
-  e.stopPropagation();
-  const safe = ticker.replace('-','_');
-  const btn  = document.getElementById(`ct-${safe}`);
-  if (compareSet.has(ticker)) {
-    compareSet.delete(ticker);
-    btn.classList.remove('selected');
-    btn.textContent = '+';
-  } else {
-    if (compareSet.size >= 3) return;
-    compareSet.add(ticker);
-    btn.classList.add('selected');
-    btn.textContent = '✓';
-  }
-  const bar = document.getElementById('compare-bar');
-  const cnt = document.getElementById('compare-count');
-  if (compareSet.size > 0) {
-    bar.classList.add('show');
-    cnt.textContent = `${compareSet.size} selected`;
-  } else {
-    bar.classList.remove('show');
-  }
-}
-
-function openCompare() {
-  if (compareSet.size < 2) return;
-  const grid = document.getElementById('compare-grid');
-  grid.innerHTML = '';
-  compareSet.forEach(ticker => {
-    const s = ALL.find(x => x.ticker === ticker);
-    const p = prices[ticker];
-    const col = document.createElement('div');
-    col.className = 'compare-col';
-    col.innerHTML = `
-      <div class="cc-sym">${s.ticker}</div>
-      <div class="cc-name">${s.name}</div>
-      <div class="cc-row"><span>Price</span><b>${p ? '$'+p.c.toFixed(2) : 'N/A'}</b></div>
-      <div class="cc-row"><span>Change</span><b style="color:${p&&p.d>=0?'var(--green)':'var(--red)'}">${p ? (p.d>=0?'+':'')+p.d.toFixed(2)+' ('+p.dp.toFixed(2)+'%)' : '—'}</b></div>
-      <div class="cc-row"><span>Beta</span><b>${s.beta}</b></div>
-      <div class="cc-row"><span>P/E</span><b>${s.pe}</b></div>
-      <div class="cc-row"><span>52W Low</span><b>$${s.w52l}</b></div>
-      <div class="cc-row"><span>52W High</span><b>$${s.w52h}</b></div>
-      <div class="cc-row"><span>Risk Score</span><b>${s.risk}/100</b></div>
-      <div class="cc-row"><span>Tier</span><b>${ALL.indexOf(s)<10?'Core':'Growth'}</b></div>
-    `;
-    grid.appendChild(col);
-  });
-  document.getElementById('modal-overlay').classList.add('open');
-}
-
-function closeCompare(e) {
-  if (e.target === document.getElementById('modal-overlay'))
-    document.getElementById('modal-overlay').classList.remove('open');
-}
-function closeCompareBtn() {
-  document.getElementById('modal-overlay').classList.remove('open');
+// ── MARKET STATUS ──
+function checkMarket() {
+  const et=new Date(new Date().toLocaleString('en-US',{timeZone:'America/New_York'}));
+  const d=et.getDay(), h=et.getHours()+et.getMinutes()/60;
+  const open=d>=1&&d<=5&&h>=9.5&&h<16;
+  document.getElementById('sdot').className=`sdot${open?'':' closed'}`;
+  document.getElementById('stxt').textContent=open?'Market Open':'Market Closed';
 }
 
 // ── THEME ──
 function toggleTheme() {
-  const html = document.documentElement;
-  html.setAttribute('data-theme', html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  const h=document.documentElement;
+  h.setAttribute('data-theme',h.getAttribute('data-theme')==='dark'?'light':'dark');
 }
 
 // ── INIT ──
-checkMarketStatus();
-setInterval(checkMarketStatus, 60000);
-updateTicker(); // placeholder until prices load
+checkMarket(); setInterval(checkMarket,60000);
+updateTicker();
 loadAllPrices();
 </script>
 </body>
